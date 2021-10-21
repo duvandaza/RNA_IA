@@ -4,8 +4,9 @@ import 'dart:io';
 
 import 'package:csv/csv.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:perceptron/models/models.dart';
 import 'package:perceptron/page/entrenamiento_page.dart';
-import 'package:perceptron/widget/MostrarCsv.dart';
+import 'package:perceptron/widget/widget.dart';
 
 class ViewCsvPage extends StatefulWidget {
 
@@ -20,15 +21,10 @@ class ViewCsvPage extends StatefulWidget {
 class _ViewCsvPageState extends State<ViewCsvPage> {
 
   List<List<dynamic>> peso = [];
-  int neuronaEntrada = 0;
-  int neuronaSalida = 0;
-  int nPatrones = 0;
-  String rata = '';
-  String iteraciones = '';
-  String erms = '';
-  bool activacion = false;
+
+  final datosRna = DatosRNA();
+
   String _opcionSeleccionada = 'Rampa';
-  List patrones = [];
 
   List<String> _fActivacion = ['Rampa', 'Escalon' ];
 
@@ -55,7 +51,7 @@ class _ViewCsvPageState extends State<ViewCsvPage> {
             SizedBox(height: 10,),
             MostrarPeso(peso: peso),
             SizedBox(height: 20,),
-            DatosCsv(neuronaEntrada: neuronaEntrada, neuronaSalida: neuronaSalida, nPatrones: nPatrones),
+            DatosCsv(neuronaEntrada: datosRna.nEntrada, neuronaSalida: datosRna.nSalida, nPatrones: datosRna.numeroPatrones),
             SizedBox(height: 20,),
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 10),
@@ -69,7 +65,7 @@ class _ViewCsvPageState extends State<ViewCsvPage> {
                           child: TextFormField(
                             onChanged: (value) {
                               setState(() {
-                                iteraciones = value;
+                                datosRna.iteraciones = value;
                               });
                             },
                             keyboardType: TextInputType.number,
@@ -88,7 +84,7 @@ class _ViewCsvPageState extends State<ViewCsvPage> {
                           child: TextFormField(
                             onChanged: (value) {
                               setState(() {
-                                rata = value;
+                                datosRna.rata = value;
                               });
                             },
                             keyboardType: TextInputType.number,
@@ -111,7 +107,7 @@ class _ViewCsvPageState extends State<ViewCsvPage> {
                           child: TextFormField(
                             onChanged: (value) {
                               setState(() {
-                                erms = value;
+                                datosRna.erms = value;
                               });
                             },
                             keyboardType: TextInputType.number,
@@ -140,12 +136,9 @@ class _ViewCsvPageState extends State<ViewCsvPage> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: (){
-          List wpeso = peso[0];
-          print(wpeso);
-          Navigator.push(context, MaterialPageRoute( builder: (context) => EntrenamientoPage(
-            erms: erms, iteraciones: iteraciones, nPatrones: nPatrones, neuronaEntrada: neuronaEntrada, neuronaSalida: neuronaSalida,
-            patron: patrones, peso: wpeso, rata: rata, activacion: activacion,
-          ))); 
+          datosRna.peso = peso[0];
+          print(datosRna.peso);
+          Navigator.push(context, MaterialPageRoute( builder: (context) => EntrenamientoPage(datosRNA: datosRna)));
         },
         child: Icon(Icons.play_arrow),
       ),
@@ -195,23 +188,23 @@ class _ViewCsvPageState extends State<ViewCsvPage> {
     List tipoValor = [];
     
 
-    neuronaEntrada = 0;
-    neuronaSalida = 0;
+    datosRna.nEntrada = 0;
+    datosRna.nSalida = 0;
     tipoValor = entrada[0];
     entrada.removeAt(0);
-    patrones = entrada;
+    datosRna.patrones = entrada;
     print('entrada $tipoValor');
-    print('patrones ${patrones.length}');
-    nPatrones = patrones.length;
+    print('patrones ${datosRna.patrones.length}');
+    datosRna.numeroPatrones = datosRna.patrones.length;
 
     int x = tipoValor.length;
     print(x);
     for(int j = 0; j <= x-1; j++){
       String dato = tipoValor[j];
       if(dato[0] == 'x'){
-        neuronaEntrada++;
+        datosRna.nEntrada++;
       }else if(dato[0] == 'y'){
-        neuronaSalida++;
+        datosRna.nSalida++;
       }
     }
     setState(() {
@@ -249,9 +242,9 @@ class _ViewCsvPageState extends State<ViewCsvPage> {
                 _opcionSeleccionada = opt.toString();
               });
               if( _opcionSeleccionada == 'Rampa' ){
-                activacion = false;
+                datosRna.activacion = false;
               }else if( _opcionSeleccionada == 'Escalon' ){
-                activacion = true;
+                datosRna.activacion = true;
               }
               setState(() {});
             },
@@ -264,31 +257,5 @@ class _ViewCsvPageState extends State<ViewCsvPage> {
 
 }
 
-class MostrarPeso extends StatelessWidget {
-  const MostrarPeso({
-    Key? key,
-    required this.peso,
-  }) : super(key: key);
 
-  final List<List> peso;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: EdgeInsets.symmetric(horizontal: 15),
-      child: Table(
-        border: TableBorder.all(width: 1.0),
-        children: peso.map((item) {
-          return TableRow(
-            children: item.map((row) {
-              return Center(
-                child: Text(row.toStringAsFixed(3), style: TextStyle(fontSize: 20),)
-              );
-            }).toList(),
-          );
-        }).toList(),
-      ),
-    );
-  }
-}
 

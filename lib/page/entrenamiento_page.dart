@@ -4,32 +4,17 @@ import 'package:csv/csv.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:perceptron/models/YrvVsYd_models.dart';
+import 'package:perceptron/models/models.dart';
+
 import 'package:perceptron/widget/graficaYdVsYr.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 
 class EntrenamientoPage extends StatefulWidget {
   
-  final int neuronaEntrada;
-  final int neuronaSalida;
-  final int nPatrones;
-  final String rata;
-  final String iteraciones;
-  final String erms;
-  final List peso;
-  final List patron;
-  final bool activacion;
+  final DatosRNA datosRNA;
 
   const EntrenamientoPage({Key? key, 
-    required this.neuronaEntrada, 
-    required this.neuronaSalida, 
-    required this.nPatrones, 
-    required this.rata, 
-    required this.iteraciones, 
-    required this.erms, 
-    required this.peso,
-    required this.patron,
-    required this.activacion
+    required this.datosRNA
   }) : super(key: key);
 
   @override
@@ -87,9 +72,7 @@ class _EntrenamientoPageState extends State<EntrenamientoPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  TrearPeso(peso: widget.peso[0], numero: 1,),
-                  SizedBox(width: 10,),
-                  TrearPeso(peso: widget.peso[1], numero: 2,),
+                  Text('VAN LOS PESOS')
                 ],
               ),
               SizedBox(height: 20,),
@@ -101,7 +84,7 @@ class _EntrenamientoPageState extends State<EntrenamientoPage> {
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
           List<List> data = [
-            widget.peso
+            widget.datosRNA.peso
           ];
           String csvData = ListToCsvConverter().convert(data);
           final String directorio = (await getExternalStorageDirectory())!.path;
@@ -124,25 +107,25 @@ class _EntrenamientoPageState extends State<EntrenamientoPage> {
 
     listaYd = [];
 
-    for(int p = 0; p<= widget.nPatrones-1; p++ ){
-      listaYd.add(PerceptronYd(p+1, widget.patron[p][widget.neuronaEntrada].toDouble()));
+    for(int p = 0; p<= widget.datosRNA.numeroPatrones-1; p++ ){
+      listaYd.add(PerceptronYd(p+1, widget.datosRNA.patrones[p][widget.datosRNA.nEntrada].toDouble()));
     }
     
     setState(() {
       
     });
     
-    while( go <= int.parse(widget.iteraciones) ){
+    while( go <= int.parse(widget.datosRNA.iteraciones) ){
       epatron = [];
       listaYr = [];
-      for(int j = 0; j <= widget.nPatrones-1; j++ ){
+      for(int j = 0; j <= widget.datosRNA.numeroPatrones-1; j++ ){
         double soma = 0;
-        for(int x = 0; x <= widget.neuronaEntrada-1; x++ ){
-          soma += widget.patron[j][x] * widget.peso[x];
+        for(int x = 0; x <= widget.datosRNA.nEntrada-1; x++ ){
+          soma += widget.datosRNA.patrones[j][x] * widget.datosRNA.peso[x];
         }
         print('soma = $soma');
         double valorYr = 0;
-        if(widget.activacion == false){
+        if(widget.datosRNA.activacion == false){
           if(soma < 0 ){
             valorYr = 0;
           }else if(soma >= 0 || soma <= 1){
@@ -150,7 +133,7 @@ class _EntrenamientoPageState extends State<EntrenamientoPage> {
           }else if(soma > 1){
             valorYr = 1;
           }
-        }else if(widget.activacion == true){
+        }else if(widget.datosRNA.activacion == true){
           if(soma >= 0){
             valorYr = 1;
           }else if(soma < 0 ){
@@ -163,15 +146,15 @@ class _EntrenamientoPageState extends State<EntrenamientoPage> {
           pruebayr.add([j+1, valorYr]);
         });
         
-        double elineal = widget.patron[j][widget.neuronaEntrada].toDouble() - valorYr;
+        double elineal = widget.datosRNA.patrones[j][widget.datosRNA.nEntrada].toDouble() - valorYr;
         print('el = $elineal');
-        double ep = elineal / widget.neuronaSalida;
+        double ep = elineal / widget.datosRNA.nSalida;
         epatron.add(ep);
         print('ep = $ep');
-        for(int p = 0; p <= widget.peso.length-1; p++){
-          widget.peso[p] = widget.peso[p] + double.tryParse(widget.rata)! * elineal * widget.patron[j][p];
+        for(int p = 0; p <= widget.datosRNA.peso.length-1; p++){
+          widget.datosRNA.peso[p] = widget.datosRNA.peso[p] + double.tryParse(widget.datosRNA.rata)! * elineal * widget.datosRNA.patrones[j][p];
         }
-        print('peso = ${widget.peso}');
+        print('peso = ${widget.datosRNA.peso}');
       }
       print('ep = $epatron');
       double sumaEp = 0;
@@ -179,14 +162,14 @@ class _EntrenamientoPageState extends State<EntrenamientoPage> {
         sumaEp += epatron[e];
       }
       double errorIte = 0;
-      errorIte = sumaEp / widget.nPatrones;
+      errorIte = sumaEp / widget.datosRNA.numeroPatrones;
       setState(() {
         errorLineal.add(PerceptronData(go, errorIte));
         Duration(seconds: 5);
       });
       print('ERMS = $errorIte');
-      if(errorIte <= double.tryParse(widget.erms)!){
-        go = int.parse(widget.iteraciones);
+      if(errorIte <= double.tryParse(widget.datosRNA.erms)!){
+        go = int.parse(widget.datosRNA.iteraciones);
       }
       go++;
     }

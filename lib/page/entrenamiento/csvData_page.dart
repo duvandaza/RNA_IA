@@ -4,8 +4,12 @@ import 'dart:io';
 import 'package:csv/csv.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:perceptron/models/models.dart';
+
 import 'package:perceptron/page/entrenamiento_page.dart';
 import 'package:perceptron/widget/MostrarCsv.dart';
+import 'package:perceptron/widget/widget.dart';
+
 
 class CsvDataPage extends StatefulWidget {
   CsvDataPage({Key? key}) : super(key: key);
@@ -16,20 +20,17 @@ class CsvDataPage extends StatefulWidget {
 
 class _CsvDataPageState extends State<CsvDataPage> {
 
-  int neuronaEntrada = 0;
-  int neuronaSalida = 0;
-  int nPatrones = 0;
-  String rata = '';
-  String iteraciones = '';
-  String erms = '';
+  String _opcionSeleccionada = 'Rampa';
   String peso1 = '';
   String peso2 = '';
-  List patrones = [];
-  List peso = [];
-  bool activacion = false;
-  String _opcionSeleccionada = 'Rampa';
+  String pesoP = '';
+
+  List pesoPruba = [];
+  List<List> pesoMatriz =[];
 
   List<String> _fActivacion = ['Rampa', 'Escalon' ];
+
+  final datosRna = DatosRNA();
 
   @override
   Widget build(BuildContext context) {
@@ -48,7 +49,7 @@ class _CsvDataPageState extends State<CsvDataPage> {
         child: Column(
           children: [
             SizedBox(height: 20,),
-            DatosCsv(neuronaEntrada: neuronaEntrada, neuronaSalida: neuronaSalida, nPatrones: nPatrones),
+            DatosCsv(neuronaEntrada: datosRna.nEntrada, neuronaSalida: datosRna.nSalida, nPatrones: datosRna.numeroPatrones),
             SizedBox(height: 20,),
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 10),
@@ -62,7 +63,7 @@ class _CsvDataPageState extends State<CsvDataPage> {
                           child: TextFormField(
                             onChanged: (value) {
                               setState(() {
-                                iteraciones = value;
+                                datosRna.iteraciones = value;
                               });
                             },
                             keyboardType: TextInputType.number,
@@ -81,7 +82,7 @@ class _CsvDataPageState extends State<CsvDataPage> {
                           child: TextFormField(
                             onChanged: (value) {
                               setState(() {
-                                rata = value;
+                                datosRna.rata = value;
                               });
                             },
                             keyboardType: TextInputType.number,
@@ -104,7 +105,7 @@ class _CsvDataPageState extends State<CsvDataPage> {
                           child: TextFormField(
                             onChanged: (value) {
                               setState(() {
-                                erms = value;
+                                datosRna.erms = value;
                               });
                             },
                             keyboardType: TextInputType.number,
@@ -166,6 +167,68 @@ class _CsvDataPageState extends State<CsvDataPage> {
                         ),
                       ],
                     ),
+                    SizedBox(height: 20,),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextFormField(
+                            onChanged: (value) {
+                              setState(() {
+                                pesoP = value;
+                              });
+                            },
+                            keyboardType: TextInputType.number,
+                            decoration: InputDecoration(
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(20)
+                              ),
+                              hintText: 'valor del peso 2',
+                              labelText: 'Peso 2',
+                              helperText: 'Valor de -1 a 1',
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: 20,),
+                        Container(
+                          padding: EdgeInsets.only(bottom: 18),
+                          child: MaterialButton(
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                            disabledColor: Colors.grey,
+                            elevation: 0,
+                            color: Colors.blue,
+                            child: Container(
+                              padding: EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                              child: Text('Agregar peso', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),),
+                            ),
+                            onPressed: (){
+                              if(pesoP != ''){
+                                if(pesoPruba.length <= datosRna.nEntrada-1){
+                                  print('paso');
+                                  setState(() {
+                                    pesoPruba.add(double.tryParse(pesoP));
+                                    print('$pesoPruba');
+                                  });
+
+                                }
+                              }
+                            },
+                          ),
+                        )
+                      ],
+                    ),
+                    SizedBox(height: 20,),
+                    (pesoPruba.isNotEmpty) ? Table(
+                      border: TableBorder.all(width: 1.0),
+                      children: [
+                        TableRow(
+                          children: pesoPruba.map((e) {
+                            return Center(
+                              child: Text(e.toStringAsFixed(3), style: TextStyle(fontSize: 20),)
+                            );
+                          }).toList()
+                        )
+                      ],
+                    ) : Container(),
                   ]
                 ),
               ),
@@ -175,13 +238,10 @@ class _CsvDataPageState extends State<CsvDataPage> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: (){
-          peso = [];
-          peso.add(double.tryParse(peso1));
-          peso.add(double.tryParse(peso2));
-          Navigator.push(context, MaterialPageRoute( builder: (context) => EntrenamientoPage(
-            erms: erms, iteraciones: iteraciones, nPatrones: nPatrones, neuronaEntrada: neuronaEntrada, neuronaSalida: neuronaSalida,
-            patron: patrones, peso: peso, rata: rata, activacion: activacion,
-          ))); 
+          datosRna.peso = [];
+          datosRna.peso.add(double.tryParse(peso1));
+          datosRna.peso.add(double.tryParse(peso2));
+          Navigator.push(context, MaterialPageRoute( builder: (context) => EntrenamientoPage( datosRNA: datosRna, ))); 
         },
         child: Icon(Icons.play_arrow),
       ),
@@ -220,34 +280,34 @@ class _CsvDataPageState extends State<CsvDataPage> {
     List tipoValor = [];
     
 
-    neuronaEntrada = 0;
-    neuronaSalida = 0;
+    datosRna.nEntrada = 0;
+    datosRna.nSalida = 0;
     tipoValor = entrada[0];
     entrada.removeAt(0);
-    patrones = entrada;
+    datosRna.patrones = entrada;
     print('entrada $tipoValor');
-    print('patrones ${patrones.length}');
-    nPatrones = patrones.length;
+    print('patrones ${datosRna.patrones.length}');
+    datosRna.numeroPatrones = datosRna.patrones.length;
 
     int x = tipoValor.length;
     print(x);
     for(int j = 0; j <= x-1; j++){
       String dato = tipoValor[j];
       if(dato[0] == 'x'){
-        neuronaEntrada++;
+        datosRna.nEntrada++;
       }else if(dato[0] == 'y'){
-        neuronaSalida++;
+        datosRna.nSalida++;
       }
     }
 
     setState(() {
-      neuronaEntrada;
-      neuronaSalida;
-      nPatrones;
+      datosRna.nEntrada;
+      datosRna.nSalida;
+      datosRna.patrones;
     });
 
-    print('Numero de entrada $neuronaEntrada');
-    print('Numero de salida $neuronaSalida');
+    print('Numero de entrada $datosRna.nEntrada');
+    print('Numero de salida $datosRna.nSalida');
 
   }
 
@@ -281,9 +341,9 @@ class _CsvDataPageState extends State<CsvDataPage> {
                 _opcionSeleccionada = opt.toString();
               });
               if( _opcionSeleccionada == 'Rampa' ){
-                activacion = false;
+                datosRna.activacion = false;
               }else if( _opcionSeleccionada == 'Escalon' ){
-                activacion = true;
+                datosRna.activacion = true;
               }
               setState(() {});
             },
